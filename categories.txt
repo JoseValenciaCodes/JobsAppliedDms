@@ -1,0 +1,25 @@
+1,Software Development,Design and development of software applications,85000.50,5,2025-03-02 21:13:13.000000  
+2,Sales,Industry sector related to selling products and promoting services,65520.36,4,2025-03-02 21:13:13.000000  
+3,Healthcare,Medical and wellness-related professions,72000.00,5,2025-03-02 21:13:13.000000  
+4,Education,Teaching and academic professions,50000.00,4,2025-03-02 21:13:13.000000  
+5,Finance,Managing money, banking, and investments,90000.75,5,2025-03-02 21:13:13.000000  
+6,Marketing,Advertising and brand promotion strategies,67000.25,4,2025-03-02 21:13:13.000000  
+7,Engineering,Technical and mechanical problem-solving,95000.80,5,2025-03-02 21:13:13.000000  
+8,Customer Service,Assisting customers with inquiries and issues,45000.00,3,2025-03-02 21:13:13.000000  
+9,Human Resources,Managing employee relations and recruitment,70000.60,4,2025-03-02 21:13:13.000000  
+10,Data Science,Analyzing and interpreting complex data,105000.90,5,2025-03-02 21:13:13.000000  
+11,Construction,Building and infrastructure projects,60000.00,4,2025-03-02 21:13:13.000000  
+12,Graphic Design,Visual content creation and branding,55000.20,3,2025-03-02 21:13:13.000000  
+13,Legal,Law-related professions and consultancy,95000.45,5,2025-03-02 21:13:13.000000  
+14,Cybersecurity,Protecting systems and data from cyber threats,110000.30,5,2025-03-02 21:13:13.000000  
+15,Logistics,Supply chain and transportation management,68000.15,4,2025-03-02 21:13:13.000000  
+16,Hospitality,Hotels, restaurants, and tourism-related services,46000.00,3,2025-03-02 21:13:13.000000  
+17,Agriculture,Farming, food production, and sustainability,58000.25,3,2025-03-02 21:13:13.000000  
+18,Energy,Oil, gas, and renewable energy sectors,98000.40,4,2025-03-02 21:13:13.000000  
+19,AI & Machine Learning,Developing intelligent systems,120000.00,5,2025-03-02 21:13:13.000000  
+20,Public Relations,Managing communication and media relations,65000.10,4,2025-03-02 21:13:13.000000  
+21,Automotive,Vehicle manufacturing and maintenance,62000.50,4,2025-03-02 21:13:13.000000  
+22,Research & Development,Innovating and creating new technologies,110000.75,5,2025-03-02 21:13:13.000000  
+23,Entertainment,Film, music, and media industries,70000.80,3,2025-03-02 21:13:13.000000  
+24,Real Estate,Property sales and management,75000.35,4,2025-03-02 21:13:13.000000  
+25,Food Industry,Food production and restaurant management,52000.00,3,2025-03-02 21:13:13.000000  

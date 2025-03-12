@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #wrapper {
+            display: flex;
+            height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        #sidebar-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            z-index: 100;
+            background-color: #343a40;
+        }
+
+        #page-content-wrapper {
+            flex: 1;
+            padding: 20px;
+            margin-left: 250px;
+            transition: margin-left 0.3s ease;
+        }
+
+        #wrapper.toggled #sidebar-wrapper {
+            margin-left: -250px;
+        }
+
+        #wrapper.toggled #page-content-wrapper {
+            margin-left: 0;
+        }
+
+        .sidebar-header h4 {
+            color: white;
+            font-size: 24px;
+        }
+
+        .list-group-item {
+            color: white;
+        }
+
+        .list-group-item:hover {
+            background-color: #495057;
+        }
+    </style>
+    <div class="list-group list-group-flush">
+        <a href="/dashboard" class="list-group-item list-group-item-action bg-dark text-white">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <a href="/companies" class="list-group-item list-group-item-action bg-dark text-white">
+            <i class="fas fa-building"></i> Company
+        </a>
+        <a href="/categories" class="list-group-item list-group-item-action bg-dark text-white">
+            <i class="fas fa-th-list"></i> Category
+        </a>
+        <a href="#" class="list-group-item list-group-item-action bg-dark text-white">
+            <i class="fas fa-briefcase"></i> Job
+        </a>
+        <a href="#" class="list-group-item list-group-item-action bg-dark text-white">
+            <i class="fas fa-file-alt"></i> Application
+        </a>
+        <a href="#" id="logoutSidebar" class="list-group-item list-group-item-action bg-dark text-white">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+</head>
+<body>
+<script>
+    // Handle Sidebar logout click
+    $("#logoutSidebar").click(function(event) {
+        event.preventDefault();
+        $.ajax({
+            type: "POST",
+            url: "/api/auth/logout",
+            success: function(response) {
+                window.location.href = "/login";
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON.error);
+            }
+        });
+    });
+</script>
+</body>
+</html>
