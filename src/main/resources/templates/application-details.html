@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Application Details</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body class="bg-light">
+<div class="d-flex" id="wrapper">
+    <div class="bg-dark text-white" id="sidebar-wrapper" style="width: 250px;">
+        <div class="sidebar-header text-center py-4">
+            <h4>JobsJournal</h4>
+        </div>
+        <div th:replace="~{sidebar}"></div>
+    </div>
+    <div id="page-content-wrapper" class="w-100">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+            <button class="btn btn-secondary" id="menu-toggle">☰</button>
+        </nav>
+        <div class="container mt-5">
+            <div id="feedback-alerts"></div>
+            <div id="error-alerts"></div>
+            <a href="/applications" class="btn btn-secondary">←</a>
+            <h2>Application Details</h2>
+
+            <form id="applicationForm">
+                <div class="mb-3">
+                    <label for="user" class="form-label">User</label>
+                    <select id="user" class="form-select" required>
+                        <option value="None" disabled>Select User</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="job" class="form-label">Job</label>
+                    <select class="form-select" id="job" required>
+                        <option value="None" disabled>Select Job</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="appliedAt" class="form-label">Application Time:</label>
+                    <input type="text" id="appliedAt" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label for="status" class="form-label">Application Status</label>
+                    <select id="status" class="form-select" required>
+                        <option value="None" disabled>Select Application Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="shortlisted" class="form-label">Application Shortlisted</label>
+                    <select id="shortlisted" class="form-select" required>
+                        <option value="true">True</option>
+                        <option value="false">False</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="resumeLink" class="form-label">Resume Link</label>
+                    <input id="resumeLink" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label for="createdAt" class="form-label">Created At</label>
+                    <input type="text" class="form-control" id="createdAt" disabled>
+                </div>
+
+                <div id="add-application" class="w-100 d-flex flex-row justify-content-center align-items-center p-5 d-none">
+                    <button id="addBtn" class="btn btn-block btn-success">Add Application</button>
+                </div>
+
+                <div id="application-details" class="w-100 d-flex flex-row justify-content-between align-items-center p-5 d-none">
+                    <button id="updateBtn" type="submit" class="btn btn-block btn-primary">Update Application Details</button>
+                    <button id="deleteBtn" type="button" class="btn btn-block btn-danger">Delete Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    // Redirect to login page in case of Unauthorized response
+    $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+        if (jqxhr.status === 401) {
+            // Redirect to login page
+            window.location.href = "/login";
+        }
+    });
+
+    $(document).ready(function() {
+        const pathParts = window.location.pathname.split("/");
+        const applicationId = pathParts[pathParts.length - 1]; // Put the application ID here from URL or variable
+
+        // Sidebar toggle functionality
+        $("#menu-toggle").click(function(e) {
+            e.preventDefault();
+            $("#wrapper").toggleClass("toggled");
+        });
+
+        // Initialize Date Picker
+        $("#appliedAt").flatpickr({
+            enableTime: true,
+            dateFormat: "Y-m-d H:i:S",
+            time_24hr: true
+        });
+
+        // Get currently logged in user from the back-end
+        function getLoggedInUserFromBackend()
+        {
+            $.ajax({
+                type: "GET",
+                url: "/api/auth/user-session",
+                success: function(userData)
+                {
+                    var userOptionHtml = `<option value="${userData.id}">${userData.firstName} ${userData.lastName}</option>`;
+                    $("#user").append(userOptionHtml);
+                },
+                error: function (xhr, status, error)
+                {
+                    $("#feedback-alerts").empty();
+
+                    if (xhr.responseJSON) {
+                        Object.entries(xhr.responseJSON).forEach(([key, value]) => {
+                            $("#error-alerts").append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${value}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`);
+                        });
+                    } else {
+                        $("#error-alerts").append(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`);
+                    }
+                }
+            });
+        }
+
+        // Get jobs from back-end
+        function getJobsFromBackend()
+        {
+            $.ajax({
+                type: "GET",
+                url: "/api/jobs",
+                success: function (jobs) {
+                    jobs.forEach(function(job) {
+                        var jobOptionHtml = `<option value="${job.id}">${job.title} - $${job.salary}</option>`;
+                        $("#job").append(jobOptionHtml);
+                    });
+                },
+                error: function(xhr, status, error)
+                {
+                    $("#feedback-alerts").empty();
+
+                    if (xhr.responseJSON) {
+                        Object.entries(xhr.responseJSON).forEach(([key, value]) => {
+                            $("#error-alerts").append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${value}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`);
+                        });
+                    } else {
+                        $("#error-alerts").append(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`);
+                    }
+                }
+            });
+        }
+
+        getJobsFromBackend();
+        getLoggedInUserFromBackend();
+
+        if (!isNaN(applicationId))
+        {
+            $("#application-details").removeClass("d-none");
+
+            // Get Application From Back-End
+            function getApplicationFromBackEnd()
+            {
+                $.ajax({
+                    type: "GET",
+                    url: `/api/applications/${applicationId}`,
+                    success: function (application) {
+                        // Populate form fields with the application data
+                        $("#appliedAt").val(moment(application.appliedAt, "YYYY-MM-DDTHH:mm:ss").format("YYYY-MM-DD HH:mm:ss"));
+                        $("#status").val(application.status);
+                        $("#shortlisted").val(String(application.shortlisted));
+                        $("#resumeLink").val(application.resumeLink);
+                        $("#job").val(application.jobId);
+
+                        const createdAt = new Date(application.createdAt);
+                        const formattedDate = createdAt.toLocaleString();
+                        $("#createdAt").val(formattedDate);
+                    },
+                    error: function(xhr, status, error) {
+                        $("#feedback-alerts").empty();
+
+                        if (xhr.responseJSON) {
+                            Object.entries(xhr.responseJSON).forEach(([key, value]) => {
+                                $("#error-alerts").append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${value}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`);
+                            });
+                        } else {
+                            $("#error-alerts").append(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`);
+                        }
+                    }
+                });
+            }
+
+            getApplicationFromBackEnd();
+
+            // Handle form submission to update application
+            $("#updateBtn").click(function(event) {
+                event.preventDefault();
+
+                const updatedApplication = {
+                    appliedAt:  moment($("#appliedAt").val(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DDTHH:mm:ss"),
+                    status: $("#status").val(),
+                    shortlisted: $("#shortlisted").val(),
+                    resumeLink: $("#resumeLink").val(),
+                    userId: $("#user").val(),
+                    jobId: $("#job").val()
+                };
+
+                $.ajax({
+                    type: "PUT",
+                    url: `/api/applications/${applicationId}`,
+                    contentType: "application/json",
+                    data: JSON.stringify(updatedApplication),
+                    success: function (response){
+                        getApplicationFromBackEnd();
+                        $("#feedback-alerts").empty();
+                        $("#feedback-alerts").append(`
+                    <div class="alert alert-success alert-dismissible fade show">
+                        Application details were successfully updated
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>`);
+                    },
+                    error: function(xhr, status, error) {
+                        $("#feedback-alerts").empty();
+
+                        if (xhr.responseJSON) {
+                            Object.entries(xhr.responseJSON).forEach(([key, value]) => {
+                                $("#error-alerts").append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${value}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`);
+                            });
+                        } else {
+                            $("#error-alerts").append(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`);
+                        }
+                    }
+                });
+
+
+            });
+
+            // Handle job deletion
+            $("#deleteBtn").click(function (event) {
+                event.preventDefault();
+
+                $.ajax({
+                    type: "DELETE",
+                    url: `/api/applications/${applicationId}`,
+                    success: function (response) {
+                        window.location.href = "/applications";
+                    },
+                    error: function(xhr) {
+                        $("#feedback-alerts").empty();
+
+                        if (xhr.responseJSON) {
+                            Object.entries(xhr.responseJSON).forEach(([key, value]) => {
+                                $("#error-alerts").append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${value}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`);
+                            });
+                        } else {
+                            $("#error-alerts").append(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`);
+                        }
+                    }
+                });
+            });
+        }
+
+        else
+        {
+            // Add an application to the system
+            $("#add-application").removeClass("d-none");
+
+            $("#addBtn").click(function(event) {
+                event.preventDefault();
+
+                const addApplication = {
+                    appliedAt:  moment($("#appliedAt").val(), "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DDTHH:mm:ss"),
+                    status: $("#status").val(),
+                    shortlisted: $("#shortlisted").val(),
+                    resumeLink: $("#resumeLink").val(),
+                    userId: $("#user").val(),
+                    jobId: $("#job").val()
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: "/api/applications",
+                    contentType: "application/json",
+                    data: JSON.stringify(addApplication),
+                    success: function(response) {
+                        window.location.href = "/applications";
+                    },
+                    error: function(xhr, status, error) {
+                        $("#feedback-alerts").empty();
+
+                        if (xhr.responseJSON) {
+                            Object.entries(xhr.responseJSON).forEach(([key, value]) => {
+                                $("#error-alerts").append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${value}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`);
+                            });
+                        } else {
+                            $("#error-alerts").append(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`);
+                        }
+                    }
+                })
+            });
+        }
+    });
+</script>
+</body>
+</html>

@@ -64,6 +64,15 @@
 </div>
 
 <script>
+
+    // Redirect to login page in case of Unauthorized response
+    $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+        if (jqxhr.status === 401) {
+            // Redirect to login page
+            window.location.href = "/login";
+        }
+    });
+
     // Fetch the category details using the API
     $(document).ready(function() {
         const pathParts = window.location.pathname.split("/");

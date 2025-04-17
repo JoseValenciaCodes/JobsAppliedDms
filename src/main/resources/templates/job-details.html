@@ -21,17 +21,22 @@
         </nav>
         <div class="container mt-5">
             <div id="feedback-alerts"></div>
+            <div id="error-alerts"></div>
             <a href="/jobs" class="btn btn-secondary">←</a>
             <h2>Jobs Details</h2>
 
             <form id="jobForm">
                 <div class="mb-3">
                     <label for="company" class="form-label">Company</label>
-                    <input type="text" class="form-control" id="company" name="company" required>
+                    <select id="company" class="form-select" required>
+                        <option value="None" disabled>Select Company</option>
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label for="category" class="form-label">Category</label>
-                    <input type="text" class="form-control" id="category" name="category" required>
+                    <select class="form-select" id="category" required>
+                        <option value="None" disabled>Select Category</option>
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label for="title" class="form-label">Title</label>
@@ -50,7 +55,13 @@
 
                 <div class="mb-3">
                     <label for="type" class="form-label">Type</label>
-                    <input type="text" class="form-control" id="type" name="type" required>
+                    <select class="form-control" id="type" required>
+                        <option value="full-time">Full-Time</option>
+                        <option value="part-time">Part-Time</option>
+                        <option value="contract">Contract</option>
+                        <option value="freelance">Freelance</option>
+                        <option value="temporary">Temporary</option>
+                    </select>
                 </div>
 
                 <div class="mb-3">
@@ -58,13 +69,13 @@
                     <input type="text" class="form-control" id="createdAt" disabled>
                 </div>
 
-                <div id="add-category" class="w-100 d-flex flex-row justify-content-center align-items-center p-5 d-none">
-                    <button id="addBtn" class="btn btn-block btn-success">Add Category</button>
+                <div id="add-job" class="w-100 d-flex flex-row justify-content-center align-items-center p-5 d-none">
+                    <button id="addBtn" class="btn btn-block btn-success">Add Job</button>
                 </div>
 
-                <div id="category-details" class="w-100 d-flex flex-row justify-content-between align-items-center p-5 d-none">
-                    <button id="updateBtn" type="submit" class="btn btn-block btn-primary">Update Category Details</button>
-                    <button id="deleteBtn" type="button" class="btn btn-block btn-danger">Delete Category</button>
+                <div id="job-details" class="w-100 d-flex flex-row justify-content-between align-items-center p-5 d-none">
+                    <button id="updateBtn" type="submit" class="btn btn-block btn-primary">Update Job Details</button>
+                    <button id="deleteBtn" type="button" class="btn btn-block btn-danger">Delete Job</button>
                 </div>
             </form>
         </div>
@@ -72,10 +83,19 @@
 </div>
 
 <script>
-    // Fetch the category details using the API
+
+    // Redirect to login page in case of Unauthorized response
+    $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+        if (jqxhr.status === 401) {
+            // Redirect to login page
+            window.location.href = "/login";
+        }
+    });
+
+    // Fetch the job details using the API
     $(document).ready(function() {
         const pathParts = window.location.pathname.split("/");
-        const jobId = pathParts[pathParts.length - 1];/* Put the category ID here from URL or variable */
+        const jobId = pathParts[pathParts.length - 1];/* Put the job ID here from URL or variable */
 
         // Sidebar toggle functionality
         $("#menu-toggle").click(function(e) {
@@ -83,23 +103,98 @@
             $("#wrapper").toggleClass("toggled");
         });
 
+        // Get companies from back-end
+        function getCompaniesFromBackend()
+        {
+            $.ajax({
+                type: "GET",
+                url: "/api/companies",
+                success: function(companies) {
+                    // Populate company options
+                    companies.forEach(function(company) {
+                        var optionHtml = `<option value="${company.id}">${company.name}</option>`;
+                        $("#company").append(optionHtml);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    $("#feedback-alerts").empty();
+
+                    if (xhr.responseJSON) {
+                        Object.entries(xhr.responseJSON).forEach(([key, value]) => {
+                            $("#error-alerts").append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${value}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`);
+                        });
+                    } else {
+                        $("#error-alerts").append(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`);
+                    }
+                }
+            });
+        }
+
+        getCompaniesFromBackend();
+
+        function getCategoriesFromBackend()
+        {
+            $.ajax({
+                type: "GET",
+                url: "/api/categories",
+                success: function(categories) {
+                    // Populate company options
+                    categories.forEach(function(category) {
+                        var optionHtml = `<option value="${category.id}">${category.name}</option>`;
+                        $("#category").append(optionHtml);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    $("#feedback-alerts").empty();
+
+                    if (xhr.responseJSON) {
+                        Object.entries(xhr.responseJSON).forEach(([key, value]) => {
+                            $("#error-alerts").append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${value}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`);
+                        });
+                    } else {
+                        $("#error-alerts").append(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`);
+                    }
+                }
+            });
+        }
+
+        getCategoriesFromBackend();
+
         if (!isNaN(jobId))
         {
             $("#job-details").removeClass("d-none");
-            function getCategoriesFromBackEnd()
+            function getJobFromBackEnd()
             {
                 $.ajax({
                     type: "GET",
-                    url: `/api/categories/${categoryId}`,
-                    success: function(category) {
-                        // Populate the form fields with the category data
-                        $("#name").val(category.name);
-                        $("#description").val(category.description);
-                        $("#avgSalary").val(category.avgSalary);
-                        $("#demand").val(category.demand);
+                    url: `/api/jobs/${jobId}`,
+                    success: function(job) {
+                        // Populate the form fields with the job data
+                        $("#title").val(job.title);
+                        $("#description").val(job.description);
+                        $("#salary").val(job.salary);
+                        $("#type").val(job.type);
+                        $("#company").val(job.companyId);
+                        $("#category").val(job.categoryId);
 
                         // Format the createdAt field
-                        const createdAt = new Date(category.createdAt);
+                        const createdAt = new Date(job.createdAt);
                         const formattedDate = createdAt.toLocaleString();
                         $("#createdAt").val(formattedDate);
                     },
@@ -125,29 +220,31 @@
                 });
             }
 
-            getCategoriesFromBackEnd();
+            getJobFromBackEnd();
 
-            // Handle form submission to update category
+            // Handle form submission to update job
             $("#updateBtn").click(function(event) {
                 event.preventDefault();
 
-                const updatedCategory = {
-                    name: $("#name").val(),
+                const updatedJob = {
+                    title: $("#title").val(),
                     description: $("#description").val(),
-                    avgSalary: $("#avgSalary").val(),
-                    demand: $("#demand").val()
+                    salary: $("#salary").val(),
+                    type: $("#type").val(),
+                    companyId: $("#company").val(),
+                    categoryId: $("#category").val()
                 };
                 $.ajax({
                     type: "PUT",
-                    url: `/api/categories/${categoryId}`,
+                    url: `/api/jobs/${jobId}`,
                     contentType: "application/json",
-                    data: JSON.stringify(updatedCategory),
+                    data: JSON.stringify(updatedJob),
                     success: function(response) {
-                        getCategoriesFromBackEnd();
+                        getJobFromBackEnd();
                         $("#feedback-alerts").empty();
                         $("#feedback-alerts").append(`
                     <div class="alert alert-success alert-dismissible fade show">
-                        Category details were successfully updated
+                        Job details were successfully updated
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>`);
                     },
@@ -173,15 +270,15 @@
                 });
             });
 
-            // Handle category deletion
+            // Handle job deletion
             $("#deleteBtn").click(function(event) {
                 event.preventDefault();
 
                 $.ajax({
                     type: "DELETE",
-                    url: `/api/categories/${categoryId}`,
+                    url: `/api/jobs/${jobId}`,
                     success: function(response) {
-                        window.location.href = "/categories";
+                        window.location.href = "/jobs";
                     },
                     error: function(xhr) {
                         $("#feedback-alerts").empty();
@@ -208,25 +305,26 @@
 
         else
         {
-            // Add a category to the system
-            $("#add-category").removeClass("d-none");
+            // Add a job to the system
+            $("#add-job").removeClass("d-none");
 
             $("#addBtn").click(function(event) {
                 event.preventDefault();
-
-                const addCategory = {
-                    name: $("#name").val(),
+                const addJob = {
+                    title: $("#title").val(),
                     description: $("#description").val(),
-                    avgSalary: $("#avgSalary").val(),
-                    demand: $("#demand").val()
+                    salary: $("#salary").val(),
+                    type: $("#type").val(),
+                    companyId: $("#company").val(),
+                    categoryId: $("#category").val()
                 };
                 $.ajax({
                     type: "POST",
-                    url: `/api/categories`,
+                    url: `/api/jobs`,
                     contentType: "application/json",
-                    data: JSON.stringify(addCategory),
+                    data: JSON.stringify(addJob),
                     success: function(response) {
-                        window.location.href = "/categories";
+                        window.location.href = "/jobs";
                     },
                     error: function(xhr, status, error) {
                         $("#feedback-alerts").empty();

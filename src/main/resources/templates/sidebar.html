@@ -57,10 +57,10 @@
         <a href="/categories" class="list-group-item list-group-item-action bg-dark text-white">
             <i class="fas fa-th-list"></i> Category
         </a>
-        <a href="#" class="list-group-item list-group-item-action bg-dark text-white">
+        <a href="/jobs" class="list-group-item list-group-item-action bg-dark text-white">
             <i class="fas fa-briefcase"></i> Job
         </a>
-        <a href="#" class="list-group-item list-group-item-action bg-dark text-white">
+        <a href="/applications" class="list-group-item list-group-item-action bg-dark text-white">
             <i class="fas fa-file-alt"></i> Application
         </a>
         <a href="#" id="logoutSidebar" class="list-group-item list-group-item-action bg-dark text-white">
@@ -70,6 +70,15 @@
 </head>
 <body>
 <script>
+
+    // Redirect to login page in case of Unauthorized response
+    $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+        if (jqxhr.status === 401) {
+            // Redirect to login page
+            window.location.href = "/login";
+        }
+    });
+
     // Handle Sidebar logout click
     $("#logoutSidebar").click(function(event) {
         event.preventDefault();

@@ -17,6 +17,7 @@ public interface UserService
     UserPayload registerUser(UserDto userDto, HttpSession httpSession);
     UserPayload loginUser(LoginDto loginDto, HttpSession httpSession);
     UserPayload getLoggedInUser(HttpSession httpSession);
+    UserPayload updateLoggedInUser(HttpSession httpSession, UserDto userDto);
+    MessagePayload deleteLoggedInUser(HttpSession httpSession);
     MessagePayload logout(HttpSession httpSession);
-
 }

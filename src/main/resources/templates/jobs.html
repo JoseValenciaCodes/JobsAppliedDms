@@ -34,6 +34,15 @@
 </div>
 
 <script>
+
+    // Redirect to login page in case of Unauthorized response
+    $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+        if (jqxhr.status === 401) {
+            // Redirect to login page
+            window.location.href = "/login";
+        }
+    });
+
     $(document).ready(function() {
         // Sidebar toggle functionality
         $("#menu-toggle").click(function(e) {

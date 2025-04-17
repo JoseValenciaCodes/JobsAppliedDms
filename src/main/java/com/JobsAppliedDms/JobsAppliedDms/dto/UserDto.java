@@ -7,7 +7,6 @@ import jakarta.validation.constraints.*;
 * */
 public class UserDto {
 
-
     private Long id;
 
     @NotBlank(message = "First name cannot be empty")
@@ -42,6 +41,18 @@ public class UserDto {
 
     public UserDto() {
 
+    }
+
+    @Override
+    public String toString() {
+        return "UserDto{" +
+                "id=" + id +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", age=" + age +
+                ", isEmployed=" + isEmployed +
+                '}';
     }
 
     public UserDto(Long id, String firstName, String lastName, String email, String password, Integer age, Boolean isEmployed) {

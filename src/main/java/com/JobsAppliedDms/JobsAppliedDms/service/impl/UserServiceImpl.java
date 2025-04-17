@@ -18,7 +18,6 @@ import com.JobsAppliedDms.JobsAppliedDms.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
-import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -147,4 +146,70 @@ public class UserServiceImpl implements UserService
                 user.getCreatedAt()
         );
     }
+
+    @Override
+    public UserPayload updateLoggedInUser(HttpSession httpSession, UserDto userDto) {
+
+        // Get the currently registered user
+        Long userId = (Long) httpSession.getAttribute("userId");
+
+        if (userId == null)
+        {
+            return null;
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new EntityNotFoundException("User not found")
+        );
+
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
+
+        if (!(!user.getEmail().equals(userDto.getEmail()) &&
+                userRepository.existsByEmail(userDto.getEmail())))
+        {
+            user.setEmail(userDto.getEmail());
+        }
+
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setAge(userDto.getAge());
+        user.setIsEmployed(userDto.getIsEmployed());
+
+        User updatedUser = userRepository.save(user);
+
+        return new UserPayload(
+                updatedUser.getId(),
+                updatedUser.getFirstName(),
+                updatedUser.getLastName(),
+                updatedUser.getEmail(),
+                updatedUser.getAge(),
+                updatedUser.getIsEmployed(),
+                updatedUser.getCreatedAt()
+        );
+    }
+
+    @Override
+    public MessagePayload deleteLoggedInUser(HttpSession httpSession) {
+
+        // Get the currently registered user
+        Long userId = (Long) httpSession.getAttribute("userId");
+
+        if (userId == null)
+        {
+            return null;
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new EntityNotFoundException("User not found")
+        );
+
+        // Delete user
+        userRepository.delete(user);
+
+        // Invalidate current httpSession
+        httpSession.invalidate();
+
+        return new MessagePayload("Your account has been successfully deleted");
+    }
+
 }

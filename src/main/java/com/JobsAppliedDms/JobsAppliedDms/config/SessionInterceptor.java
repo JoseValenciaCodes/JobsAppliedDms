@@ -28,6 +28,7 @@ public class SessionInterceptor implements HandlerInterceptor
         // Session is invalid, so return 401 Unauthorized response
         if (session == null || session.getAttribute("userId") == null)
         {
+            /*
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
             response.setContentType("application/json"); // Define we'll return a JSON payload
             response.setCharacterEncoding("UTF-8");
@@ -35,6 +36,8 @@ public class SessionInterceptor implements HandlerInterceptor
             // Create JSON response
             ErrorPayload errorPayload = new ErrorPayload("Unauthorized Access. Please log in");
             response.getWriter().write(objectMapper.writeValueAsString(errorPayload));
+            */
+            response.sendRedirect("/login");
             return false;
         }
 

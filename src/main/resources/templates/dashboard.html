@@ -4,6 +4,7 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 </head>
@@ -24,17 +25,106 @@
         </nav>
 
         <div class="container mt-5">
-            <h2>Welcome</h2>
-            <p>You are now logged in.</p>
-            <button id="logoutBtn" class="btn btn-danger">Logout</button>
+            <h2>Welcome, <span id="user-name"></span></h2>
+
+            <form id="updateProfileForm" class="mt-4">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="firstName">First Name</label>
+                        <input type="text" class="form-control" id="firstName">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" class="form-control" id="lastName">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email">
+                </div>
+                <div class="mb-3">
+                    <label for="age">Age</label>
+                    <input type="number" class="form-control" id="age">
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="password" name="password">
+                        <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
+                          <i class="bi bi-eye" id="toggleIcon"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="employed">Employment Status</label>
+                    <select class="form-select" id="employed">
+                        <option value="true">Employed</option>
+                        <option value="false">Unemployed</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Profile Info</button>
+                <div id="updateMessage"></div>
+            </form>
+
+            <div class="m-5 p-4 border border-danger rounded bg-white shadow-sm">
+                <h4 class="text-danger mb-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                </h4>
+                <p class="text-muted">These actions are irreversible. Proceed with caution.</p>
+
+                <div class="d-grid gap-3">
+                    <button id="deleteAccountBtn" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                        <i class="fas fa-user-slash me-2"></i>Delete My Account
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel"><i class="fas fa-user-slash me-2"></i>Confirm Account Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to permanently delete your account? <br>This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <div id="errorFeedbackModal"></div>
+                    <button id="confirmDeleteBtn" type="button" class="btn btn-danger">Yes, Delete My Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
+
+    // Redirect to login page in case of Unauthorized response
+    $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+        if (jqxhr.status === 401) {
+            // Redirect to login page
+            window.location.href = "/login";
+        }
+    });
+
     $(document).ready(function() {
         // Get user details
 
+        // Handle password input toggle
+        $('#togglePassword').on('click', function () {
+            const passwordField = $('#password');
+            const icon = $('#toggleIcon');
+            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+
+            passwordField.attr('type', type);
+            icon.toggleClass('bi-eye bi-eye-slash');
+        });
 
         // Handle Logout button click
         $("#logoutBtn").click(function(event) {
@@ -50,6 +140,115 @@
                 }
             });
         });
+
+        function getLoggedInUserFromBackend()
+        {
+            $.ajax({
+                type: "GET",
+                url: "/api/auth/user-session",
+                success: function(userData)
+                {
+                    $("#user-name").text(`${userData.firstName} ${userData.lastName}`);
+                    $("#firstName").val(userData.firstName);
+                    $("#lastName").val(userData.lastName);
+                    $("#email").val(userData.email);
+                    $("#age").val(userData.age);
+                    $("#employed").val(String(userData.isEmployed));
+                },
+                error: function (xhr, status, error)
+                {
+                    $("#feedback-alerts").empty();
+
+                    if (xhr.responseJSON) {
+                        Object.entries(xhr.responseJSON).forEach(([key, value]) => {
+                            $("#error-alerts").append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                ${value}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`);
+                        });
+                    } else {
+                        $("#error-alerts").append(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`);
+                    }
+                }
+            });
+        }
+
+        function updateUserData()
+        {
+            // Operations to update user data
+
+            $("#updateProfileForm").on("submit", function (e) {
+
+                // Prevent Default Refresh when the form is sent
+                e.preventDefault();
+
+                console.log($("#employed").val());
+
+                // Prepare user data to send to the back-end
+                const profileData = {
+                    firstName: $("#firstName").val(),
+                    lastName: $("#lastName").val(),
+                    email: $("#email").val(),
+                    password: $("#password").val(),
+                    age: $("#age").val(),
+                    isEmployed: $("#employed").val() === "true"
+                };
+
+                $.ajax({
+                    method: "PUT",
+                    url: "/api/auth/update-profile",
+                    contentType: "application/json",
+                    data: JSON.stringify(profileData),
+                    success: function(userData)
+                    {
+                        $("#updateMessage").text("User data was successfully updated").css("color", "green");
+
+
+                        $("#user-name").text(`${userData.firstName} ${userData.lastName}`);
+                        $("#firstName").val(userData.firstName);
+                        $("#lastName").val(userData.lastName);
+                        $("#email").val(userData.email);
+                        $("#age").val(userData.age);
+                        $("#employed").val(String(userData.isEmployed));
+                    },
+                    error: function(xhr)
+                    {
+
+                        $("#updateMessage").text("Error updating user data").css("color", "red");
+                    }
+                });
+            });
+        }
+
+        function deletedLoggedInUserFromBackend()
+        {
+            $('#confirmDeleteBtn').on('click', function () {
+                // Optional: Disable the button to prevent multiple clicks
+                $(this).prop('disabled', true).text('Deleting...');
+
+                // Make an AJAX request to delete the account
+                $.ajax({
+                    url: '/api/auth/delete-account', // Replace with your actual endpoint
+                    method: 'DELETE',
+                    success: function (response) {
+                        // Redirect or show a success message
+                        window.location.href = '/'; // Or homepage
+                    },
+                    error: function (xhr) {
+                        $('#errorFeedbackModal').text('Yes, Delete My Account').css({color: "red"});
+                    }
+                });
+            });
+        }
+
+        getLoggedInUserFromBackend()
+        updateUserData();
+        deletedLoggedInUserFromBackend();
 
         // Sidebar toggle functionality
         $("#menu-toggle").click(function(e) {

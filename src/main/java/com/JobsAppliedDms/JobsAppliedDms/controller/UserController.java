@@ -9,10 +9,7 @@ import com.JobsAppliedDms.JobsAppliedDms.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /*
 * User Controller
@@ -50,6 +47,30 @@ public class UserController
     public ResponseEntity<MessagePayload> logoutUser(HttpSession httpSession)
     {
         MessagePayload messagePayload = userService.logout(httpSession);
+        return ResponseEntity.ok(messagePayload);
+    }
+
+    /* Make a GET Request to Get Logged In User*/
+    @GetMapping("/user-session")
+    public ResponseEntity<UserPayload> getLoggedInUser(HttpSession httpSession)
+    {
+        UserPayload payload = userService.getLoggedInUser(httpSession);
+        return ResponseEntity.ok(payload);
+    }
+
+    /* Make a PUT Request to Update Logged In User */
+    @PutMapping("/update-profile")
+    public ResponseEntity<UserPayload> updateLoggedInUser(HttpSession httpSession, @Validated @RequestBody UserDto userDto)
+    {
+        UserPayload userPayload = userService.updateLoggedInUser(httpSession, userDto);
+        return ResponseEntity.ok(userPayload);
+    }
+
+    /* Make a DELETE Request to Delete Logged In User */
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<MessagePayload> deleteLoggedInUser(HttpSession httpSession)
+    {
+        MessagePayload messagePayload = userService.deleteLoggedInUser(httpSession);
         return ResponseEntity.ok(messagePayload);
     }
 }
