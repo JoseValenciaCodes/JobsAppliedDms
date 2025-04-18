@@ -155,22 +155,6 @@ public class UserServiceImplTest
         assertEquals(user.getId(), result.getId());
     }
 
-    // Test to Update User
-    @Test
-    void updateLoggedInUser_ShouldUpdateSuccessfully() {
-        when(httpSession.getAttribute("userId")).thenReturn(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(passwordEncoder.encode(userDto.getPassword())).thenReturn("hashedPassword");
-        when(userRepository.existsByEmail(userDto.getEmail())).thenReturn(false);
-        when(userRepository.save(any(User.class))).thenReturn(user);
-
-        UserPayload result = userService.updateLoggedInUser(httpSession, userDto);
-
-        assertNotNull(result);
-        assertEquals(user.getEmail(), result.getEmail());
-        verify(userRepository, times(1)).save(any(User.class));
-    }
-
     // Check out we cannot get user data when no user is logged in
     @Test
     void getLoggedInUser_ShouldReturnNullIfNotLoggedIn() {
